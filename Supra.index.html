@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Huppy Bar Inventory System</title>
+<style>
+/* Basic styling for the inventory system */
+body { font-family: Arial, sans-serif; background: #f5f5f5; color: #333; padding: 20px; }
+.container { max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+h1 { font-size: 2rem; margin-bottom: 5px; }
+.subtitle { color: #666; font-size: 0.9rem; }
+.tabs { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+.tab { background: white; border: 1px solid #ddd; color: #333; padding: 10px 20px; cursor: pointer; font-size: 0.9rem; }
+.tab:hover { background: #f0f0f0; }
+.tab.active { background: #333; color: white; border-color: #333; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th { background: #f5f5f5; padding: 12px; text-align: left; border-bottom: 2px solid #ddd; }
+td { padding: 12px; border-bottom: 1px solid #eee; }
+input { width: 100px; padding: 5px; }
+.btn { padding: 6px 12px; background: #333; color: white; border: none; cursor: pointer; border-radius: 4px; }
+.btn:hover { background: #555; }
+.alert { background: #ffebee; border-left: 4px solid #f44336; padding: 10px; margin-bottom: 15px; display: none; }
+.status-ok { color: #4caf50; font-weight: bold; }
+.status-low { color: #ff9800; font-weight: bold; }
+.status-critical { color: #f44336; font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<h1>Huppy Bar Inventory System</h1>
+<div class="subtitle">Connected to Supabase Live Database</div>
+</header>
+
+<div id="alertBanner" class="alert"></div>
+
+<div class="tabs">
+<div class="tab active" onclick="switchTab('raw')">Raw Ingredients</div>
+<div class="tab" onclick="switchTab('flavor')">Flavor Ingredients</div>
+<div class="tab" onclick="switchTab('dry')">Dry Mix</div>
+<div class="tab" onclick="switchTab('finished')">Finished Bars</div>
+</div>
+
+<div id="raw" class="tab-content active">
+<h2>Raw Ingredients</h2>
+<table>
+<thead>
+<tr><th>Ingredient</th><th>Stock (lbs)</th><th>Cost/lb</th><th>Value</th><th>Status</th><th>Update</th></tr>
+</thead>
+<tbody id="rawTable"></tbody>
+</table>
+</div>
+
+<div id="flavor" class="tab-content">
+<h2>Flavor Ingredients</h2>
+<table>
+<thead>
+<tr><th>Ingredient</th><th>Stock (lbs)</th><th>Cost/lb</th><th>Value</th><th>Status</th><th>Update</th></tr>
+</thead>
+<tbody id="flavorTable"></tbody>
+</table>
+</div>
+
+<div id="dry" class="tab-content">
+<h2>Dry Mix Inventory</h2>
+<table>
+<thead>
+<tr><th>Type</th><th>Stock (lbs)</th><th>Status</th><th>Update</th></tr>
+</thead>
+<tbody id="dryTable"></tbody>
+</table>
+</div>
+
+<div id="finished" class="tab-content">
+<h2>Finished Bars</h2>
+<table>
+<thead>
+<tr><th>Flavor</th><th>Stock (units)</th><th>Status</th><th>Update</th></tr>
+</thead>
+<tbody id="finishedTable"></tbody>
+</table>
+</div>
+
+</div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+const supabaseUrl = 'https://jqcytrrzlpaelwxftsip.supabase.co'
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxY3l0cnJ6bHBhZWx3eGZ0c2lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk5NTg1NTksImV4cCI6MjA4NTUzNDU1OX0.QBenlEhUMjMPPLI8sR633IKywHoUqUdxTy9UP4cCw1E'
+const supabase = createClient(supabaseUrl, supabaseKey)
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'))
+    event.target.classList.add('active')
+    document.getElementById(tab).classList.add('active')
+}
+
+// Helper function to get inventory and display in tables
+async function loadInventory() {
+    await loadRaw()
+    await loadFlavor()
+    await loadDry()
+    await loadFinished()
+}
+
+async function loadRaw() {
+    const { data, error } = await supabase.from('raw_ingredients').select('*')
+    if (error) { console.error(error); return }
+    document.getElementById('rawTable').innerHTML = data.map(item => `
+        <tr>
+            <td>${item.name}</td>
+            <td>${item.stock}</td>
+            <td>$${item.cost}</td>
+            <td>$${(item.stock*item.cost).toFixed(2)}</td>
+            <td class="${getStatusClass(item.stock, item.threshold)}">${getStatusText(item.stock, item.threshold)}</td>
+            <td><input type="number" id="raw_${item.id}"><button class="btn" onclick="updateRaw(${item.id})">Update</button></td>
+        </tr>
+    `).join('')
+}
+
+async function loadFlavor() {
+    const { data, error } = await supabase.from('flavor_ingredients').select('*')
+    if (error) { console.error(error); return }
+    document.getElementById('flavorTable').innerHTML = data.map(item => `
+        <tr>
+            <td>${item.name}</td>
+            <td>${item.stock}</td>
+            <td>$${item.cost}</td>
+            <td>$${(item.stock*item.cost).toFixed(2)}</td>
+            <td class="${getStatusClass(item.stock, item.threshold)}">${getStatusText(item.stock, item.threshold)}</td>
+            <td><input type="number" id="flavor_${item.id}"><button class="btn" onclick="updateFlavor(${item.id})">Update</button></td>
+        </tr>
+    `).join('')
+}
+
+async function loadDry() {
+    const { data, error } = await supabase.from('dry_mix').select('*')
+    if (error) { console.error(error); return }
+    document.getElementById('dryTable').innerHTML = data.map(item => `
+        <tr>
+            <td>${item.name}</td>
+            <td>${item.stock}</td>
+            <td class="${getStatusClass(item.stock, item.threshold)}">${getStatusText(item.stock, item.threshold)}</td>
+            <td><input type="number" id="dry_${item.id}"><button class="btn" onclick="updateDry(${item.id})">Update</button></td>
+        </tr>
+    `).join('')
+}
+
+async function loadFinished() {
+    const { data, error } = await supabase.from('finished_bars').select('*')
+    if (error) { console.error(error); return }
+    document.getElementById('finishedTable').innerHTML = data.map(item => `
+        <tr>
+            <td>${item.name}</td>
+            <td>${item.stock}</td>
+            <td class="${getStatusClass(item.stock, item.threshold)}">${getStatusText(item.stock, item.threshold)}</td>
+            <td><input type="number" id="finished_${item.id}"><button class="btn" onclick="updateFinished(${item.id})">Update</button></td>
+        </tr>
+    `).join('')
+}
+
+// Update functions
+async function updateRaw(id) {
+    const value = parseFloat(document.getElementById(`raw_${id}`).value)
+    if (isNaN(value)) return
+    await supabase.from('raw_ingredients').update({ stock: value }).eq('id', id)
+    loadInventory()
+}
+
+async function updateFlavor(id) {
+    const value = parseFloat(document.getElementById(`flavor_${id}`).value)
+    if (isNaN(value)) return
+    await supabase.from('flavor_ingredients').update({ stock: value }).eq('id', id)
+    loadInventory()
+}
+
+async function updateDry(id) {
+    const value = parseFloat(document.getElementById(`dry_${id}`).value)
+    if (isNaN(value)) return
+    await supabase.from('dry_mix').update({ stock: value }).eq('id', id)
+    loadInventory()
+}
+
+async function updateFinished(id) {
+    const value = parseInt(document.getElementById(`finished_${id}`).value)
+    if (isNaN(value)) return
+    await supabase.from('finished_bars').update({ stock: value }).eq('id', id)
+    loadInventory()
+}
+
+// Status helpers
+function getStatusText(stock, threshold) {
+    if (stock <= 0 || stock < threshold) return 'CRITICAL'
+    if (stock < threshold*2) return 'LOW'
+    return 'OK'
+}
+function getStatusClass(stock, threshold) {
+    const s = getStatusText(stock, threshold)
+    if (s==='CRITICAL') return 'status-critical'
+    if (s==='LOW') return 'status-low'
+    return 'status-ok'
+}
+
+// Load all data on page load
+loadInventory()
+
+</script>
+</body>
+</html>
