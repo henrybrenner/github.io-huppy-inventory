@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Huppy Bar Inventory System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        header {
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        
+        .tab {
+            background: white;
+            border: 1px solid #ddd;
+            color: #333;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .tab:hover {
+            background: #f0f0f0;
+        }
+        
+        .tab.active {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .alert-banner {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert-banner.show {
+            display: block;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 4px;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th {
+            background: #f5f5f5;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #ddd;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:hover {
+            background: #fafafa;
+        }
+        
+        .status-ok {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        
+        .status-low {
+            color: #ff9800;
+            font-weight: bold;
+        }
+        
+        .status-critical {
+            color: #f44336;
+            font-weight: bold;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            font-size: 1rem;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #333;
+        }
+        
+        .btn {
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        .btn:hover {
+            background: #555;
+        }
+        
+        .btn-secondary {
+            background: #666;
+        }
+        
+        .btn-secondary:hover {
+            background: #888;
+        }
+        
+        .form-container {
+            max-width: 600px;
+            border: 1px solid #ddd;
+            padding: 25px;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+        
+        .recipe-display {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .recipe-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .recipe-item:last-child {
+            border-bottom: none;
+        }
+        
+        h2 {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        h3 {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .input-small {
+            width: 120px;
+            display: inline-block;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Huppy Bar Inventory System</h1>
+            <div class="subtitle">Production & Sales Management</div>
+        </header>
+        
+        <div id="alertBanner" class="alert-banner"></div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('dashboard')">Dashboard</div>
+            <div class="tab" onclick="switchTab('raw-ingredients')">Raw Ingredients</div>
+            <div class="tab" onclick="switchTab('dry-mix')">Dry Mix</div>
+            <div class="tab" onclick="switchTab('flavor-ingredients')">Flavor Ingredients</div>
+            <div class="tab" onclick="switchTab('finished-bars')">Finished Bars</div>
+            <div class="tab" onclick="switchTab('make-dry-mix')">Make Dry Mix</div>
+            <div class="tab" onclick="switchTab('make-bars')">Make Bars</div>
+            <div class="tab" onclick="switchTab('sales')">Record Sales</div>
+        </div>
+        
+        <!-- DASHBOARD -->
+        <div id="dashboard" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Critical Alerts</div>
+                    <div class="stat-value" id="criticalCount" style="color: #f44336;">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Low Stock Items</div>
+                    <div class="stat-value" id="lowStockCount" style="color: #ff9800;">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Inventory Value</div>
+                    <div class="stat-value" id="totalValue">$0</div>
+                </div>
+            </div>
+            
+            <h2>Inventory Overview</h2>
+            <table id="dashboardTable">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Category</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="dashboardTableBody"></tbody>
+            </table>
+        </div>
+        
+        <!-- RAW INGREDIENTS -->
+        <div id="raw-ingredients" class="tab-content">
+            <h2>Raw Ingredients (for Dry Mix)</h2>
+            <p style="color: #666; margin-bottom: 20px;">Alert threshold: 5 lbs</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ingredient</th>
+                        <th>Stock (lbs)</th>
+                        <th>Cost/lb</th>
+                        <th>Value</th>
+                        <th>Status</th>
+                        <th>Update</th>
+                    </tr>
+                </thead>
+                <tbody id="rawIngredientsTable"></tbody>
+            </table>
+        </div>
+        
+        <!-- DRY MIX -->
+        <div id="dry-mix" class="tab-content">
+            <h2>Dry Mix Inventory</h2>
+            <p style="color: #666; margin-bottom: 20px;">Alert threshold: 10 lbs</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Stock (lbs)</th>
+                        <th>Status</th>
+                        <th>Update</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Regular Dry Mix</strong></td>
+                        <td><span id="regularDryMixStock">0</span></td>
+                        <td><span id="regularDryMixStatus" class="status-ok">OK</span></td>
+                        <td>
+                            <input type="number" class="input-small" id="regularDryMixUpdate" placeholder="New amount">
+                            <button class="btn" onclick="updateDryMix('regular')">Update</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>AZT Dry Mix</strong></td>
+                        <td><span id="aztDryMixStock">0</span></td>
+                        <td><span id="aztDryMixStatus" class="status-ok">OK</span></td>
+                        <td>
+                            <input type="number" class="input-small" id="aztDryMixUpdate" placeholder="New amount">
+                            <button class="btn" onclick="updateDryMix('azt')">Update</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- FLAVOR INGREDIENTS -->
+        <div id="flavor-ingredients" class="tab-content">
+            <h2>Flavor-Specific Ingredients</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ingredient</th>
+                        <th>Stock (lbs)</th>
+                        <th>Cost/lb</th>
+                        <th>Value</th>
+                        <th>Status</th>
+                        <th>Update</th>
+                    </tr>
+                </thead>
+                <tbody id="flavorIngredientsTable"></tbody>
+            </table>
+        </div>
+        
+        <!-- FINISHED BARS -->
+        <div id="finished-bars" class="tab-content">
+            <h2>Finished Bar Inventory</h2>
+            <p style="color: #666; margin-bottom: 20px;">Alert threshold: 50 units</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Flavor</th>
+                        <th>Stock (units)</th>
+                        <th>Status</th>
+                        <th>Update</th>
+                    </tr>
+                </thead>
+                <tbody id="finishedBarsTable"></tbody>
+            </table>
+        </div>
+        
+        <!-- MAKE DRY MIX -->
+        <div id="make-dry-mix" class="tab-content">
+            <h2>Log Dry Mix Production</h2>
+            <div class="form-container">
+                <div class="form-group">
+                    <label>Dry Mix Type</label>
+                    <select id="dryMixType" onchange="showDryMixRecipe()">
+                        <option value="regular">Regular Dry Mix</option>
+                        <option value="azt">AZT Dry Mix</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Number of Batches</label>
+                    <input type="number" id="dryMixBatches" value="1" min="1" onchange="showDryMixRecipe()">
+                </div>
+                
+                <div id="dryMixRecipeDisplay" class="recipe-display"></div>
+                
+                <button class="btn" onclick="produceDryMix()">Log Production</button>
+            </div>
+        </div>
+        
+        <!-- MAKE BARS -->
+        <div id="make-bars" class="tab-content">
+            <h2>Log Bar Production</h2>
+            <div class="form-container">
+                <div class="form-group">
+                    <label>Flavor</label>
+                    <select id="barFlavor" onchange="showBarRecipe()">
+                        <option value="apple">Apple Cinnamon Raisin</option>
+                        <option value="azt">AZT Wild Mesquite</option>
+                        <option value="pecan">Pecan Orange Spice</option>
+                        <option value="coconut">Coconut Date Ginger</option>
+                        <option value="chocolateBerry">Chocolate Berry Love</option>
+                        <option value="chocolateJava">Chocolate Java</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Number of Batches</label>
+                    <input type="number" id="barBatches" value="1" min="1" onchange="showBarRecipe()">
+                </div>
+                
+                <div class="form-group">
+                    <label>Bars Per Batch</label>
+                    <input type="number" id="barsPerBatch" value="48" min="1">
+                </div>
+                
+                <div id="barRecipeDisplay" class="recipe-display"></div>
+                
+                <button class="btn" onclick="produceBars()">Log Production</button>
+            </div>
+        </div>
+        
+        <!-- SALES TAB -->
+        <div id="sales" class="tab-content">
+            <h2>Record Sales</h2>
+            
+            <div class="section">
+                <h3>Option 1: Import from Shopify</h3>
+                <div class="form-container">
+                    <p style="margin-bottom: 15px; color: #666;">
+                        Copy your Shopify orders data (columns I and J) and paste below. 
+                        The system will count quantities sold by product title.
+                    </p>
+                    <div class="form-group">
+                        <label>Paste Shopify Data (Ordered Quantity | Product Title)</label>
+                        <textarea id="shopifyData" rows="10" placeholder="Example:
+1	Variety - 12 Pack
+2	Chocolate Berry Love - Single
+0	(shipping row - will be ignored)
+1	AZT Wild Mesquite - 12 Pack"></textarea>
+                    </div>
+                    <button class="btn" onclick="importShopifyData()">Import & Deduct from Inventory</button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>Option 2: Manual Sales Entry</h3>
+                <div class="form-container">
+                    <div class="form-group">
+                        <label>Product</label>
+                        <select id="manualProduct">
+                            <option value="">-- Select Product --</option>
+                            <option value="appleCinnamonRaisin|12">Apple Cinnamon Raisin - 12 Pack</option>
+                            <option value="appleCinnamonRaisin|1">Apple Cinnamon Raisin - Single</option>
+                            <option value="aztWildMesquite|12">AZT Wild Mesquite - 12 Pack</option>
+                            <option value="aztWildMesquite|1">AZT Wild Mesquite - Single</option>
+                            <option value="chocolateBerryLove|12">Chocolate Berry Love - 12 Pack</option>
+                            <option value="chocolateBerryLove|1">Chocolate Berry Love - Single</option>
+                            <option value="chocolateJava|12">Chocolate Java - 12 Pack</option>
+                            <option value="chocolateJava|1">Chocolate Java - Single</option>
+                            <option value="coconutDateGinger|12">Coconut Date Ginger - 12 Pack</option>
+                            <option value="coconutDateGinger|1">Coconut Date Ginger - Single</option>
+                            <option value="pecanOrangeSpice|12">Pecan Orange Spice - 12 Pack</option>
+                            <option value="pecanOrangeSpice|1">Pecan Orange Spice - Single</option>
+                            <option value="variety|2">Variety - 12 Pack (2 of each flavor)</option>
+                            <option value="sampler|1">Sampler - 6 Pack (1 of each flavor)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Quantity Sold</label>
+                        <input type="number" id="manualQuantity" value="1" min="1">
+                    </div>
+                    
+                    <button class="btn" onclick="recordManualSale()">Record Sale</button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>Recent Sales</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date/Time</th>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Units Deducted</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesHistory"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Same inventory structure as before
+        let inventory = {
+            rawIngredients: {
+                oats: { stock: 0, cost: 1.50, threshold: 5 },
+                almonds: { stock: 0, cost: 8.00, threshold: 5 },
+                cashews: { stock: 0, cost: 10.00, threshold: 5 },
+                walnuts: { stock: 0, cost: 9.00, threshold: 5 },
+                sunflowerSeeds: { stock: 0, cost: 3.00, threshold: 5 },
+                flaxSeeds: { stock: 0, cost: 4.00, threshold: 5 },
+                pumpkinSeeds: { stock: 0, cost: 5.00, threshold: 5 },
+                sesameSeeds: { stock: 0, cost: 6.00, threshold: 5 },
+                spirulina: { stock: 0, cost: 25.00, threshold: 1 },
+                nutritionalYeast: { stock: 0, cost: 12.00, threshold: 2 }
+            },
+            dryMix: {
+                regular: { stock: 0, threshold: 10 },
+                azt: { stock: 0, threshold: 10 }
+            },
+            flavorIngredients: {
+                apples: { stock: 0, cost: 3.00, threshold: 2 },
+                raisins: { stock: 0, cost: 4.00, threshold: 2 },
+                cinnamon: { stock: 0, cost: 15.00, threshold: 1 },
+                salt: { stock: 0, cost: 2.00, threshold: 2 },
+                tapioca: { stock: 0, cost: 5.00, threshold: 5 },
+                honey: { stock: 0, cost: 8.00, threshold: 3 },
+                vanilla: { stock: 0, cost: 20.00, threshold: 1 },
+                pecans: { stock: 0, cost: 10.00, threshold: 3 },
+                mesquite: { stock: 0, cost: 12.00, threshold: 2 },
+                cayenne: { stock: 0, cost: 10.00, threshold: 1 },
+                allSpice: { stock: 0, cost: 8.00, threshold: 1 },
+                orangeOil: { stock: 0, cost: 15.00, threshold: 0.5 },
+                coconutFlake: { stock: 0, cost: 5.00, threshold: 2 },
+                ginger: { stock: 0, cost: 10.00, threshold: 1 },
+                coconutFlavor: { stock: 0, cost: 20.00, threshold: 0.5 },
+                dates: { stock: 0, cost: 6.00, threshold: 3 },
+                cranberries: { stock: 0, cost: 7.00, threshold: 3 },
+                blueberries: { stock: 0, cost: 8.00, threshold: 2 },
+                chocolate: { stock: 0, cost: 12.00, threshold: 3 },
+                coffee: { stock: 0, cost: 10.00, threshold: 1 }
+            },
+            finishedBars: {
+                appleCinnamonRaisin: { stock: 0, threshold: 50 },
+                aztWildMesquite: { stock: 0, threshold: 50 },
+                pecanOrangeSpice: { stock: 0, threshold: 50 },
+                coconutDateGinger: { stock: 0, threshold: 50 },
+                chocolateBerryLove: { stock: 0, threshold: 50 },
+                chocolateJava: { stock: 0, threshold: 50 }
+            },
+            salesHistory: []
+        };
+        
+        const dryMixRecipes = {
+            regular: {
+                oats: 1500, almonds: 430, cashews: 300, walnuts: 300,
+                sunflowerSeeds: 430, flaxSeeds: 200, pumpkinSeeds: 300,
+                sesameSeeds: 330, spirulina: 20, nutritionalYeast: 45
+            },
+            azt: {
+                almonds: 750, sesameSeeds: 400, cashews: 500,
+                pumpkinSeeds: 400, walnuts: 300, sunflowerSeeds: 700,
+                nutritionalYeast: 60
+            }
+        };
+        
+        const barRecipes = {
+            apple: { dryMix: 2500, dryMixType: 'regular', apples: 210, raisins: 550, cinnamon: 25, salt: 28, tapioca: 950, honey: 300, vanilla: 20 },
+            azt: { dryMix: 2875, dryMixType: 'azt', pecans: 403, mesquite: 202, salt: 37, cayenne: 2, tapioca: 905, honey: 360, vanilla: 20 },
+            pecan: { dryMix: 2500, dryMixType: 'regular', pecans: 600, allSpice: 15, cinnamon: 20, salt: 28, tapioca: 1050, honey: 300, vanilla: 20, orangeOil: 5 },
+            coconut: { dryMix: 2500, dryMixType: 'regular', coconutFlake: 225, ginger: 40, salt: 28, tapioca: 950, honey: 300, vanilla: 25, coconutFlavor: 6, dates: 625 },
+            chocolateBerry: { dryMix: 2500, dryMixType: 'regular', cranberries: 375, blueberries: 175, salt: 28, tapioca: 1000, honey: 300, vanilla: 20, chocolate: 350 },
+            chocolateJava: { dryMix: 2500, dryMixType: 'regular', coffee: 90, salt: 28, tapioca: 1050, honey: 300, vanilla: 20, chocolate: 350 }
+        };
+        
+        function gramsToPounds(grams) {
+            return grams / 453.592;
+        }
+        
+        function loadData() {
+            const saved = localStorage.getItem('huppyInventory');
+            if (saved) {
+                inventory = JSON.parse(saved);
+            }
+            updateAllDisplays();
+            displaySalesHistory();
+        }
+        
+        function saveData() {
+            localStorage.setItem('huppyInventory', JSON.stringify(inventory));
+            updateAllDisplays();
+            displaySalesHistory();
+        }
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+        
+        function getStatus(current, threshold) {
+            if (current <= 0 || current < threshold) return 'CRITICAL';
+            if (current < threshold * 2) return 'LOW';
+            return 'OK';
+        }
+        
+        function getStatusClass(status) {
+            if (status === 'CRITICAL') return 'status-critical';
+            if (status === 'LOW') return 'status-low';
+            return 'status-ok';
+        }
+        
+        function updateDashboard() {
+            let critical = 0, low = 0, totalValue = 0;
+            const rows = [];
+            
+            for (const [key, data] of Object.entries(inventory.rawIngredients)) {
+                totalValue += data.stock * data.cost;
+                const status = getStatus(data.stock, data.threshold);
+                if (status === 'CRITICAL') critical++;
+                else if (status === 'LOW') low++;
+                rows.push({ name: formatName(key), category: 'Raw Ingredient', stock: `${data.stock.toFixed(2)} lbs`, status });
+            }
+            
+            for (const [key, data] of Object.entries(inventory.flavorIngredients)) {
+                totalValue += data.stock * data.cost;
+                const status = getStatus(data.stock, data.threshold);
+                if (status === 'CRITICAL') critical++;
+                else if (status === 'LOW') low++;
+                rows.push({ name: formatName(key), category: 'Flavor Ingredient', stock: `${data.stock.toFixed(2)} lbs`, status });
+            }
+            
+            for (const [key, data] of Object.entries(inventory.dryMix)) {
+                const status = getStatus(data.stock, data.threshold);
+                if (status === 'CRITICAL') critical++;
+                else if (status === 'LOW') low++;
+                rows.push({ name: `${key} Dry Mix`, category: 'Dry Mix', stock: `${data.stock.toFixed(2)} lbs`, status });
+            }
+            
+            for (const [key, data] of Object.entries(inventory.finishedBars)) {
+                const status = getStatus(data.stock, data.threshold);
+                if (status === 'CRITICAL') critical++;
+                else if (status === 'LOW') low++;
+                rows.push({ name: formatName(key), category: 'Finished Bars', stock: `${data.stock} units`, status });
+            }
+            
+            document.getElementById('criticalCount').textContent = critical;
+            document.getElementById('lowStockCount').textContent = low;
+            document.getElementById('totalValue').textContent = `$${totalValue.toFixed(0)}`;
+            
+            const alertBanner = document.getElementById('alertBanner');
+            if (critical > 0) {
+                alertBanner.textContent = `⚠️ ${critical} items are critically low or out of stock!`;
+                alertBanner.classList.add('show');
+            } else {
+                alertBanner.classList.remove('show');
+            }
+            
+            document.getElementById('dashboardTableBody').innerHTML = rows.map(row => `
+                <tr>
+                    <td><strong>${row.name}</strong></td>
+                    <td>${row.category}</td>
+                    <td>${row.stock}</td>
+                    <td><span class="${getStatusClass(row.status)}">${row.status}</span></td>
+                </tr>
+            `).join('');
+        }
+        
+        function formatName(key) {
+            return key.replace(/([A-Z])/g, ' $1').trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        }
+        
+        function updateRawIngredientsTable() {
+            document.getElementById('rawIngredientsTable').innerHTML = Object.entries(inventory.rawIngredients).map(([key, data]) => {
+                const value = data.stock * data.cost;
+                const status = getStatus(data.stock, data.threshold);
+                return `
+                    <tr>
+                        <td><strong>${formatName(key)}</strong></td>
+                        <td>${data.stock.toFixed(2)}</td>
+                        <td>$${data.cost.toFixed(2)}</td>
+                        <td>$${value.toFixed(2)}</td>
+                        <td><span class="${getStatusClass(status)}">${status}</span></td>
+                        <td>
+                            <input type="number" step="0.1" class="input-small" id="update_${key}">
+                            <button class="btn" onclick="updateIngredient('rawIngredients', '${key}')">Update</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function updateFlavorIngredientsTable() {
+            document.getElementById('flavorIngredientsTable').innerHTML = Object.entries(inventory.flavorIngredients).map(([key, data]) => {
+                const value = data.stock * data.cost;
+                const status = getStatus(data.stock, data.threshold);
+                return `
+                    <tr>
+                        <td><strong>${formatName(key)}</strong></td>
+                        <td>${data.stock.toFixed(2)}</td>
+                        <td>$${data.cost.toFixed(2)}</td>
+                        <td>$${value.toFixed(2)}</td>
+                        <td><span class="${getStatusClass(status)}">${status}</span></td>
+                        <td>
+                            <input type="number" step="0.1" class="input-small" id="update_${key}">
+                            <button class="btn" onclick="updateIngredient('flavorIngredients', '${key}')">Update</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function updateFinishedBarsTable() {
+            document.getElementById('finishedBarsTable').innerHTML = Object.entries(inventory.finishedBars).map(([key, data]) => {
+                const status = getStatus(data.stock, data.threshold);
+                return `
+                    <tr>
+                        <td><strong>${formatName(key)}</strong></td>
+                        <td>${data.stock}</td>
+                        <td><span class="${getStatusClass(status)}">${status}</span></td>
+                        <td>
+                            <input type="number" class="input-small" id="update_${key}">
+                            <button class="btn" onclick="updateIngredient('finishedBars', '${key}')">Update</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function updateDryMixStatus() {
+            ['regular', 'azt'].forEach(type => {
+                const data = inventory.dryMix[type];
+                const status = getStatus(data.stock, data.threshold);
+                document.getElementById(`${type}DryMixStock`).textContent = data.stock.toFixed(2);
+                document.getElementById(`${type}DryMixStatus`).className = getStatusClass(status);
+                document.getElementById(`${type}DryMixStatus`).textContent = status;
+            });
+        }
+        
+        function updateIngredient(category, key) {
+            const newValue = parseFloat(document.getElementById(`update_${key}`).value);
+            if (isNaN(newValue) || newValue < 0) {
+                alert('Please enter a valid number');
+                return;
+            }
+            inventory[category][key].stock = newValue;
+            saveData();
+            document.getElementById(`update_${key}`).value = '';
+        }
+        
+        function updateDryMix(type) {
+            const newValue = parseFloat(document.getElementById(`${type}DryMixUpdate`).value);
+            if (isNaN(newValue) || newValue < 0) {
+                alert('Please enter a valid number');
+                return;
+            }
+            inventory.dryMix[type].stock = newValue;
+            saveData();
+            document.getElementById(`${type}DryMixUpdate`).value = '';
+        }
+        
+        function showDryMixRecipe() {
+            const type = document.getElementById('dryMixType').value;
+            const batches = parseInt(document.getElementById('dryMixBatches').value) || 1;
+            const recipe = dryMixRecipes[type];
+            
+            let html = '<h3>Ingredients Needed:</h3>';
+            for (const [key, grams] of Object.entries(recipe)) {
+                const totalGrams = grams * batches;
+                const totalLbs = gramsToPounds(totalGrams);
+                html += `<div class="recipe-item"><span>${formatName(key)}</span><span>${totalGrams}g (${totalLbs.toFixed(2)} lbs)</span></div>`;
+            }
+            
+            const totalWeight = Object.values(recipe).reduce((a, b) => a + b, 0) * batches;
+            html += `<div class="recipe-item" style="border-top: 2px solid #333; margin-top: 10px; padding-top: 10px;">
+                <strong>Total Output</strong><strong>${totalWeight}g (${gramsToPounds(totalWeight).toFixed(2)} lbs)</strong></div>`;
+            
+            document.getElementById('dryMixRecipeDisplay').innerHTML = html;
+        }
+        
+        function showBarRecipe() {
+            const flavor = document.getElementById('barFlavor').value;
+            const batches = parseInt(document.getElementById('barBatches').value) || 1;
+            const recipe = barRecipes[flavor];
+            
+            let html = '<h3>Ingredients Needed:</h3>';
+            const dryMixGrams = recipe.dryMix * batches;
+            html += `<div class="recipe-item"><span><strong>${recipe.dryMixType === 'azt' ? 'AZT' : 'Regular'} Dry Mix</strong></span>
+                <span>${dryMixGrams}g (${gramsToPounds(dryMixGrams).toFixed(2)} lbs)</span></div>`;
+            
+            for (const [key, grams] of Object.entries(recipe)) {
+                if (key === 'dryMix' || key === 'dryMixType') continue;
+                const totalGrams = grams * batches;
+                html += `<div class="recipe-item"><span>${formatName(key)}</span><span>${totalGrams}g (${gramsToPounds(totalGrams).toFixed(2)} lbs)</span></div>`;
+            }
+            
+            document.getElementById('barRecipeDisplay').innerHTML = html;
+        }
+        
+        function produceDryMix() {
+            const type = document.getElementById('dryMixType').value;
+            const batches = parseInt(document.getElementById('dryMixBatches').value) || 1;
+            const recipe = dryMixRecipes[type];
+            
+            for (const [key, grams] of Object.entries(recipe)) {
+                const needed = gramsToPounds(grams * batches);
+                if (inventory.rawIngredients[key].stock < needed) {
+                    alert(`Not enough ${formatName(key)}! Need ${needed.toFixed(2)} lbs, have ${inventory.rawIngredients[key].stock.toFixed(2)} lbs`);
+                    return;
+                }
+            }
+            
+            for (const [key, grams] of Object.entries(recipe)) {
+                inventory.rawIngredients[key].stock -= gramsToPounds(grams * batches);
+            }
+            
+            const totalWeight = Object.values(recipe).reduce((a, b) => a + b, 0) * batches;
+            inventory.dryMix[type].stock += gramsToPounds(totalWeight);
+            
+            saveData();
+            alert(`Successfully produced ${batches} batch(es) of ${type} dry mix!`);
+        }
+        
+        function produceBars() {
+            const flavor = document.getElementById('barFlavor').value;
+            const batches = parseInt(document.getElementById('barBatches').value) || 1;
+            const barsPerBatch = parseInt(document.getElementById('barsPerBatch').value) || 48;
+            const recipe = barRecipes[flavor];
+            
+            const dryMixNeeded = gramsToPounds(recipe.dryMix * batches);
+            if (inventory.dryMix[recipe.dryMixType].stock < dryMixNeeded) {
+                alert(`Not enough ${recipe.dryMixType} dry mix! Need ${dryMixNeeded.toFixed(2)} lbs`);
+                return;
+            }
+            
+            for (const [key, grams] of Object.entries(recipe)) {
+                if (key === 'dryMix' || key === 'dryMixType') continue;
+                const needed = gramsToPounds(grams * batches);
+                if (inventory.flavorIngredients[key].stock < needed) {
+                    alert(`Not enough ${formatName(key)}!`);
+                    return;
+                }
+            }
+            
+            inventory.dryMix[recipe.dryMixType].stock -= dryMixNeeded;
+            for (const [key, grams] of Object.entries(recipe)) {
+                if (key === 'dryMix' || key === 'dryMixType') continue;
+                inventory.flavorIngredients[key].stock -= gramsToPounds(grams * batches);
+            }
+            
+            const flavorKey = {
+                'apple': 'appleCinnamonRaisin', 'azt': 'aztWildMesquite', 'pecan': 'pecanOrangeSpice',
+                'coconut': 'coconutDateGinger', 'chocolateBerry': 'chocolateBerryLove', 'chocolateJava': 'chocolateJava'
+            }[flavor];
+            
+            inventory.finishedBars[flavorKey].stock += barsPerBatch * batches;
+            saveData();
+            alert(`Successfully produced ${barsPerBatch * batches} bars!`);
+        }
+        
+        function deductBarsSold(flavorKey, quantity) {
+            if (inventory.finishedBars[flavorKey].stock >= quantity) {
+                inventory.finishedBars[flavorKey].stock -= quantity;
+                return quantity;
+            } else {
+                const available = inventory.finishedBars[flavorKey].stock;
+                inventory.finishedBars[flavorKey].stock = 0;
+                return available;
+            }
+        }
+        
+        function importShopifyData() {
+            const data = document.getElementById('shopifyData').value.trim();
+            if (!data) {
+                alert('Please paste Shopify data');
+                return;
+            }
+            
+            const lines = data.split('\n');
+            const productMap = {
+                'Apple Cinnamon Raisin - 12 Pack': { flavor: 'appleCinnamonRaisin', units: 12 },
+                'Apple Cinnamon Raisin - Single': { flavor: 'appleCinnamonRaisin', units: 1 },
+                'AZT Wild Mesquite - 12 Pack': { flavor: 'aztWildMesquite', units: 12 },
+                'AZT Wild Mesquite - Single': { flavor: 'aztWildMesquite', units: 1 },
+                'Chocolate Berry Love - 12 Pack': { flavor: 'chocolateBerryLove', units: 12 },
+                'Chocolate Berry Love - Single': { flavor: 'chocolateBerryLove', units: 1 },
+                'Chocolate Java - 12 Pack': { flavor: 'chocolateJava', units: 12 },
+                'Chocolate Java - Single': { flavor: 'chocolateJava', units: 1 },
+                'Coconut Date Ginger - 12 Pack': { flavor: 'coconutDateGinger', units: 12 },
+                'Coconut Date Ginger - Single': { flavor: 'coconutDateGinger', units: 1 },
+                'Pecan Orange Spice - 12 Pack': { flavor: 'pecanOrangeSpice', units: 12 },
+                'Pecan Orange Spice - Single': { flavor: 'pecanOrangeSpice', units: 1 },
+                'Variety - 12 Pack': 'variety',
+                'Sampler- 6 Pack': 'sampler'
+            };
+            
+            let totalDeducted = 0;
+            const salesLog = [];
+            
+            for (const line of lines) {
+                const parts = line.split('\t');
+                if (parts.length < 2) continue;
+                
+                const quantity = parseInt(parts[0]);
+                const product = parts[1].trim();
+                
+                if (quantity <= 0 || !product) continue;
+                
+                if (product === 'Variety - 12 Pack') {
+                    // Variety = 2 of each flavor
+                    const flavors = ['appleCinnamonRaisin', 'aztWildMesquite', 'chocolateBerryLove', 
+                                   'chocolateJava', 'coconutDateGinger', 'pecanOrangeSpice'];
+                    flavors.forEach(f => {
+                        const deducted = deductBarsSold(f, quantity * 2);
+                        totalDeducted += deducted;
+                    });
+                    salesLog.push({ product, quantity, unitsDeducted: quantity * 12 });
+                } else if (product === 'Sampler- 6 Pack') {
+                    // Sampler = 1 of each flavor
+                    const flavors = ['appleCinnamonRaisin', 'aztWildMesquite', 'chocolateBerryLove', 
+                                   'chocolateJava', 'coconutDateGinger', 'pecanOrangeSpice'];
+                    flavors.forEach(f => {
+                        const deducted = deductBarsSold(f, quantity * 1);
+                        totalDeducted += deducted;
+                    });
+                    salesLog.push({ product, quantity, unitsDeducted: quantity * 6 });
+                } else if (productMap[product]) {
+                    const { flavor, units } = productMap[product];
+                    const deducted = deductBarsSold(flavor, quantity * units);
+                    totalDeducted += deducted;
+                    salesLog.push({ product, quantity, unitsDeducted: deducted });
+                }
+            }
+            
+            if (totalDeducted > 0) {
+                salesLog.forEach(sale => {
+                    inventory.salesHistory.unshift({
+                        date: new Date().toISOString(),
+                        product: sale.product,
+                        quantity: sale.quantity,
+                        unitsDeducted: sale.unitsDeducted
+                    });
+                });
+                
+                if (inventory.salesHistory.length > 100) {
+                    inventory.salesHistory = inventory.salesHistory.slice(0, 100);
+                }
+                
+                saveData();
+                alert(`Successfully imported! Deducted ${totalDeducted} units from inventory.`);
+                document.getElementById('shopifyData').value = '';
+            } else {
+                alert('No valid sales data found.');
+            }
+        }
+        
+        function recordManualSale() {
+            const productData = document.getElementById('manualProduct').value;
+            const quantity = parseInt(document.getElementById('manualQuantity').value) || 1;
+            
+            if (!productData) {
+                alert('Please select a product');
+                return;
+            }
+            
+            const parts = productData.split('|');
+            const flavor = parts[0];
+            const unitsPerPack = parseInt(parts[1]);
+            
+            let totalDeducted = 0;
+            let productName = '';
+            
+            if (flavor === 'variety') {
+                productName = 'Variety - 12 Pack';
+                const flavors = ['appleCinnamonRaisin', 'aztWildMesquite', 'chocolateBerryLove', 
+                               'chocolateJava', 'coconutDateGinger', 'pecanOrangeSpice'];
+                flavors.forEach(f => {
+                    totalDeducted += deductBarsSold(f, quantity * 2);
+                });
+            } else if (flavor === 'sampler') {
+                productName = 'Sampler - 6 Pack';
+                const flavors = ['appleCinnamonRaisin', 'aztWildMesquite', 'chocolateBerryLove', 
+                               'chocolateJava', 'coconutDateGinger', 'pecanOrangeSpice'];
+                flavors.forEach(f => {
+                    totalDeducted += deductBarsSold(f, quantity * 1);
+                });
+            } else {
+                totalDeducted = deductBarsSold(flavor, quantity * unitsPerPack);
+                productName = formatName(flavor) + (unitsPerPack > 1 ? ' - 12 Pack' : ' - Single');
+            }
+            
+            inventory.salesHistory.unshift({
+                date: new Date().toISOString(),
+                product: productName,
+                quantity: quantity,
+                unitsDeducted: totalDeducted
+            });
+            
+            if (inventory.salesHistory.length > 100) {
+                inventory.salesHistory = inventory.salesHistory.slice(0, 100);
+            }
+            
+            saveData();
+            alert(`Sale recorded! Deducted ${totalDeducted} units.`);
+            document.getElementById('manualQuantity').value = '1';
+        }
+        
+        function displaySalesHistory() {
+            if (!inventory.salesHistory || inventory.salesHistory.length === 0) {
+                document.getElementById('salesHistory').innerHTML = '<tr><td colspan="4" style="text-align: center; color: #666;">No sales recorded yet</td></tr>';
+                return;
+            }
+            
+            document.getElementById('salesHistory').innerHTML = inventory.salesHistory.map(sale => {
+                const date = new Date(sale.date);
+                return `
+                    <tr>
+                        <td>${date.toLocaleString()}</td>
+                        <td>${sale.product}</td>
+                        <td>${sale.quantity}</td>
+                        <td>${sale.unitsDeducted} units</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function updateAllDisplays() {
+            updateDashboard();
+            updateRawIngredientsTable();
+            updateFlavorIngredientsTable();
+            updateFinishedBarsTable();
+            updateDryMixStatus();
+        }
+        
+        loadData();
+        showDryMixRecipe();
+        showBarRecipe();
+    </script>
+</body>
+</html>
